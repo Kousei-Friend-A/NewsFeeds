@@ -51,16 +51,17 @@ async def download_image(image_url, title):
 async def download_youtube_video(youtube_link):
     try:
         ydl_opts = {
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
+            'format': 'best[ext=mp4]',
             'outtmpl': '%(title)s.%(ext)s',
+            'noplaylist': True,
             'postprocessors': [{
-                'key': 'FFmpegVideoMerge',
+                'key': 'FFmpegVideoConvertor',
                 'preferedformat': 'mp4',
             }],
-            'noplaylist': True,  # Avoid downloading playlists
             'quiet': True,
+            'verbose': True,  # Enable verbose logging for debugging
         }
-        
+
         logging.info(f"Downloading YouTube video from {youtube_link}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(youtube_link, download=True)
