@@ -2,10 +2,10 @@ import os
 import feedparser
 import requests
 import logging
-from pytube import YouTube
+import yt_dlp
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-import time
+import asyncio
 from collections import deque
 
 # Configure logging
@@ -25,7 +25,7 @@ app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 # Caching for sent updates
 sent_updates = deque(maxlen=100)  # Store last 100 sent titles
 
-def download_image(image_url, title):
+async def download_image(image_url, title):
     try:
         logging.info(f"Downloading image from {image_url}")
         response = requests.get(image_url)
@@ -39,20 +39,26 @@ def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
-def download_youtube_video(video_url):
+async def download_youtube_video(video_url):
     try:
         logging.info(f"Downloading video from {video_url}")
-        yt = YouTube(video_url)
-        video_stream = yt.streams.get_highest_resolution()
-        file_path = f"{yt.title}.mp4"
-        video_stream.download(filename=file_path)
-        logging.info(f"Downloaded video: {file_path}")
-        return file_path
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': '%(title)s.%(ext)s',
+            'noplaylist': True,
+            'quiet': False,
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(video_url, download=True)
+            file_path = f"{info['title']}.{info['ext']}"
+            logging.info(f"Downloaded video: {file_path}")
+            return file_path
     except Exception as e:
-        logging.error(f"Failed to download video: {e}")
+        logging.error(f"Failed to download video from {video_url}: {e}")
         return None
 
-def fetch_and_send_updates():
+async def fetch_and_send_updates():
     while True:
         try:
             logging.info("Fetching RSS feed...")
@@ -67,35 +73,32 @@ def fetch_and_send_updates():
                     youtube_link = entry.link if "youtube.com" in entry.link else None
 
                     if youtube_link:
-                        video_path = download_youtube_video(youtube_link)
+                        video_path = await download_youtube_video(youtube_link)
                         if video_path:
-                            app.send_video(chat_id=CHANNEL_ID, video=video_path, caption=title)
+                            await app.send_video(chat_id=CHANNEL_ID, video=video_path, caption=title)
                             os.remove(video_path)
                     else:
                         image_url = entry.enclosure.url if 'enclosure' in entry else None
                         if image_url:
-                            image_path = download_image(image_url, title)
+                            image_path = await download_image(image_url, title)
                             if image_path:
-                                app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
+                                await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
                                 os.remove(image_path)
 
                     logging.info(f"Sent update for: {title}")
 
             logging.info("Waiting for the next update...")
-            time.sleep(600)  # Wait before fetching again
+            await asyncio.sleep(600)  # Wait before fetching again
 
         except Exception as e:
             logging.error(f"An error occurred: {e}")
-            time.sleep(60)
+            await asyncio.sleep(60)
 
 @app.on_message(filters.command("start") & filters.private)
-def start(client, message):
+async def start(client, message):
     logging.info(f"Start command received from {message.chat.id}")
-    
     button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url=f"tg://resolve?domain={CHANNEL_ID}")]])
-    
-    # Sending a message with the button
-    app.send_message(
+    await app.send_message(
         chat_id=message.chat.id,
         text="Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
         reply_markup=button
@@ -104,4 +107,4 @@ def start(client, message):
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
-        fetch_and_send_updates()
+        app.run(fetch_and_send_updates())
