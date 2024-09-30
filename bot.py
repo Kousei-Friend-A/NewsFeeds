@@ -71,7 +71,12 @@ async def fetch_and_send_updates():
             latest_entries = []
 
             for entry in feed.entries:
-                published = parser.parse(entry.pubDate)  # Parse the publication date
+                # Check if 'pubDate' exists
+                if hasattr(entry, 'pubDate'):
+                    published = parser.parse(entry.pubDate)  # Parse the publication date
+                else:
+                    logging.warning("No pubDate found for entry. Skipping.")
+                    continue  # Skip this entry if no pubDate
 
                 if last_sent_timestamp is None or published > last_sent_timestamp:
                     latest_entries.append(entry)
@@ -80,7 +85,13 @@ async def fetch_and_send_updates():
 
             for entry in latest_entries:
                 title = entry.title
-                published = parser.parse(entry.pubDate)  # Parse again for the sent entry
+
+                # Check again for 'pubDate'
+                if hasattr(entry, 'pubDate'):
+                    published = parser.parse(entry.pubDate)  # Parse again for the sent entry
+                else:
+                    logging.warning("No pubDate found for entry. Skipping.")
+                    continue  # Skip if no pubDate
 
                 last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
                 save_last_sent_timestamp(last_sent_timestamp)
@@ -118,7 +129,7 @@ async def fetch_and_send_updates():
             else:
                 logging.info("No new updates found.")
 
-            await asyncio.sleep(600)  # Wait before fetching again
+            await asyncio.sleep(60)  # Wait before fetching again
 
         except FloodWait as e:
             logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
