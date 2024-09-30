@@ -18,7 +18,7 @@ API_ID = os.getenv('API_ID')
 API_HASH = os.getenv('API_HASH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')
-RSS_URL = os.getenv('RSS_URL')
+RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
