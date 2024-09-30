@@ -3,8 +3,8 @@ import feedparser
 import requests
 import logging
 from pytube import YouTube
-from pyrogram import Client
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # Corrected imports
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import time
 from dotenv import load_dotenv
 from collections import deque
@@ -102,7 +102,7 @@ def start(client, message):
         "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
         reply_markup=button
     )
-  
+
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
