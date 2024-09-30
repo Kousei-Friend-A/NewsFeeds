@@ -4,7 +4,7 @@ import requests
 import logging
 from pytube import YouTube
 from pyrogram import Client
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup  # Corrected imports
 import time
 from dotenv import load_dotenv
 from collections import deque
@@ -13,7 +13,7 @@ from collections import deque
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Retrieve configuration from environment variables
@@ -102,7 +102,7 @@ def start(client, message):
         "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
         reply_markup=button
     )
-
+  
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
