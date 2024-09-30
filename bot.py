@@ -71,30 +71,22 @@ async def fetch_and_send_updates():
             latest_entries = []
 
             for entry in feed.entries:
-                # Check if 'pubDate' exists
-                if hasattr(entry, 'pubDate'):
-                    published = parser.parse(entry.pubDate)  # Parse the publication date
-                else:
-                    logging.warning("No pubDate found for entry. Skipping.")
-                    continue  # Skip this entry if no pubDate
+                # Log the entry for debugging
+                logging.debug(f"Feed Entry: {entry}")
 
-                if last_sent_timestamp is None or published > last_sent_timestamp:
-                    latest_entries.append(entry)
-                    if len(latest_entries) >= 5:
-                        break
+                # Get the publication date if available, else set to None
+                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
+
+                # Add entry to the list to send
+                latest_entries.append(entry)
 
             for entry in latest_entries:
                 title = entry.title
 
-                # Check again for 'pubDate'
-                if hasattr(entry, 'pubDate'):
-                    published = parser.parse(entry.pubDate)  # Parse again for the sent entry
-                else:
-                    logging.warning("No pubDate found for entry. Skipping.")
-                    continue  # Skip if no pubDate
-
-                last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
-                save_last_sent_timestamp(last_sent_timestamp)
+                # Use the published date if available, otherwise skip the timestamp check
+                if published and (last_sent_timestamp is None or published > last_sent_timestamp):
+                    last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
+                    save_last_sent_timestamp(last_sent_timestamp)
 
                 youtube_link = entry.link if "youtube.com" in entry.link else None
                 image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
@@ -129,7 +121,7 @@ async def fetch_and_send_updates():
             else:
                 logging.info("No new updates found.")
 
-            await asyncio.sleep(60)  # Wait before fetching again
+            await asyncio.sleep(600)  # Wait before fetching again
 
         except FloodWait as e:
             logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
