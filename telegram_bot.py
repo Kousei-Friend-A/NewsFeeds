@@ -57,6 +57,7 @@ async def download_youtube_video(youtube_link):
                 'key': 'FFmpegVideoMerge',
                 'preferedformat': 'mp4',
             }],
+            'merge_output_format': 'mp4',
             'cookiefile': 'cookies.txt',
             'quiet': True,
         }
@@ -147,6 +148,10 @@ async def start(client, message):
         reply_markup=button
     )
 
+if __name__ == '__main__':
+    with app:
+        logging.info("Bot is starting...")
+        app.run(fetch_and_send_updates())
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
