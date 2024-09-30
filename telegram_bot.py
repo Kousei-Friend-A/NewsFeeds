@@ -88,12 +88,16 @@ def fetch_and_send_updates():
             logging.error(f"An error occurred: {e}")
             time.sleep(60)
 
-@app.on_message(filters.command("start"))
+@app.on_message(filters.command("start") & filters.private)
 def start(client, message):
+    logging.info(f"Start command received from {message.chat.id}")
+    
     button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url=f"tg://resolve?domain={CHANNEL_ID}")]])
+    
+    # Sending a message with the button
     app.send_message(
-        message.chat.id,
-        "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
+        chat_id=message.chat.id,
+        text="Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
         reply_markup=button
     )
 
