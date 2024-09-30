@@ -27,7 +27,10 @@ sent_updates = deque(maxlen=100)  # Store last 100 sent titles
 async def download_image(image_url, title):
     try:
         logging.info(f"Downloading image from {image_url}")
-        response = requests.get(image_url)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
+        }
+        response = requests.get(image_url, headers=headers)
         response.raise_for_status()
         file_path = f"{title}.jpg"
         with open(file_path, 'wb') as file:
