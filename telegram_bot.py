@@ -34,6 +34,7 @@ async def download_youtube_video(video_url):
             'outtmpl': '%(title)s.%(ext)s',
             'noplaylist': True,
             'quiet': True,
+            'cookiefile': 'cookies.txt',  # Path to your cookies file
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
