@@ -111,8 +111,8 @@ async def fetch_and_send_updates():
             await asyncio.sleep(600)  # Wait before fetching again
 
         except FloodWait as e:
-            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
-            await asyncio.sleep(e.x)  # Wait for the required time
+            logging.warning(f"Flood wait triggered. Waiting for {e.time} seconds.")
+            await asyncio.sleep(e.time)  # Wait for the required time
 
         except Exception as e:
             logging.error(f"An error occurred: {e}")
@@ -136,8 +136,8 @@ async def main():
                 await fetch_and_send_updates()
             break  # Exit loop if no exceptions occur
         except FloodWait as e:
-            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds before retrying.")
-            await asyncio.sleep(e.x)  # Wait for the required time
+            logging.warning(f"Flood wait triggered. Waiting for {e.time} seconds before retrying.")
+            await asyncio.sleep(e.time)  # Wait for the required time
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(10)  # Wait before retrying
