@@ -6,19 +6,21 @@ from pytube import YouTube
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import time
-from dotenv import load_dotenv
 from collections import deque
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-load_dotenv()
-API_ID = os.getenv('API_ID')
-API_HASH = os.getenv('API_HASH')
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-CHANNEL_ID = os.getenv('CHANNEL_ID')
+# Directly set your configuration here
+API_ID = 8143727
+API_HASH = "e2e9b22c6522465b62d8445840a526b1"
+BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
+CHANNEL_ID = -1002311865677
 RSS_URL = "https://www.livechart.me/feeds/headlines"
+
+# Create a new Pyrogram client with API credentials
+app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
