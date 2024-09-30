@@ -51,12 +51,8 @@ async def download_image(image_url, title):
 async def download_youtube_video(youtube_link):
     try:
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            'format': 'bestvideo/bestaudio/best',
             'outtmpl': '%(title)s.%(ext)s',
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }],
             'cookiefile': 'cookies.txt',  # Use the cookies file here
             'quiet': True,
         }
@@ -64,7 +60,7 @@ async def download_youtube_video(youtube_link):
         logging.info(f"Downloading YouTube video from {youtube_link}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(youtube_link, download=True)
-            video_path = f"{sanitize_filename(info['title'])}.mp4"
+            video_path = f"{sanitize_filename(info['title'])}.{info['ext']}"
             logging.info(f"Downloaded YouTube video: {video_path}")
             return video_path
     except Exception as e:
