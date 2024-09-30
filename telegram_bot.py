@@ -57,8 +57,7 @@ async def download_youtube_video(youtube_link):
                 'key': 'FFmpegVideoMerge',
                 'preferedformat': 'mp4',
             }],
-            'merge_output_format': 'mp4',
-            'cookiefile': 'cookies.txt',
+            'noplaylist': True,  # Avoid downloading playlists
             'quiet': True,
         }
         
@@ -66,8 +65,12 @@ async def download_youtube_video(youtube_link):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(youtube_link, download=True)
             video_path = f"{sanitize_filename(info['title'])}.mp4"
-            logging.info(f"Downloaded YouTube video: {video_path}")
-            return video_path
+            if os.path.exists(video_path):
+                logging.info(f"Downloaded YouTube video: {video_path}")
+                return video_path
+            else:
+                logging.error("Video path does not exist after download.")
+                return None
     except Exception as e:
         logging.error(f"Failed to download YouTube video: {e}")
         return None
@@ -148,10 +151,6 @@ async def start(client, message):
         reply_markup=button
     )
 
-if __name__ == '__main__':
-    with app:
-        logging.info("Bot is starting...")
-        app.run(fetch_and_send_updates())
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
