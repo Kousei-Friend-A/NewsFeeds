@@ -46,6 +46,7 @@ async def download_youtube_video(video_url):
             'format': 'best',
             'outtmpl': '%(title)s.%(ext)s',
             'noplaylist': True,
+            'cookies': 'path/to/your/cookies.txt',  # Path to your cookies file
             'quiet': False,
         }
         
