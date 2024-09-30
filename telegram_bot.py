@@ -9,18 +9,15 @@ import time
 from dotenv import load_dotenv
 from collections import deque
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Retrieve configuration from environment variables
+load_dotenv()
 API_ID = os.getenv('API_ID')
 API_HASH = os.getenv('API_HASH')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-CHANNEL_ID = os.getenv('CHANNEL_ID')  # Use channel ID here
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 RSS_URL = os.getenv('RSS_URL')
 
 # Create a new Pyrogram client with API credentials
