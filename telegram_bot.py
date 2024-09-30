@@ -22,9 +22,6 @@ RSS_URL = "https://www.livechart.me/feeds/headlines"
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Create a new Pyrogram client with API credentials
-app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-
 # Caching for sent updates
 sent_updates = deque(maxlen=100)  # Store last 100 sent titles
 
