@@ -128,12 +128,12 @@ async def start(client, message):
         reply_markup=button
     )
 
-if __name__ == '__main__':
+async def main():
     while True:
         try:
-            with app:
+            async with app:
                 logging.info("Bot is starting...")
-                app.run(fetch_and_send_updates())
+                await fetch_and_send_updates()
             break  # Exit loop if no exceptions occur
         except FloodWait as e:
             logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds before retrying.")
@@ -141,3 +141,6 @@ if __name__ == '__main__':
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(10)  # Wait before retrying
+
+if __name__ == '__main__':
+    asyncio.run(main())
