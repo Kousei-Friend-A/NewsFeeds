@@ -17,4 +17,4 @@ COPY . .
 COPY .env .
 
 # Command to run your bot
-CMD ["python", "telegram_bot.py"]
+CMD ["python3", "bot.py"]
