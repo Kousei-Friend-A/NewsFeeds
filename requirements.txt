@@ -1,0 +1,6 @@
+pyrogram
+pytube
+requests
+feedparser
+tgcrypto
+python-dotenv
