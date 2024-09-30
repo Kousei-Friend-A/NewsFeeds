@@ -69,16 +69,14 @@ def fetch_and_send_updates():
                     if youtube_link:
                         video_path = download_youtube_video(youtube_link)
                         if video_path:
-                            with app:
-                                app.send_video(chat_id=CHANNEL_ID, video=video_path, caption=title)
+                            app.send_video(chat_id=CHANNEL_ID, video=video_path, caption=title)
                             os.remove(video_path)
                     else:
                         image_url = entry.enclosure.url if 'enclosure' in entry else None
                         if image_url:
                             image_path = download_image(image_url, title)
                             if image_path:
-                                with app:
-                                    app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
+                                app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
                                 os.remove(image_path)
 
                     logging.info(f"Sent update for: {title}")
