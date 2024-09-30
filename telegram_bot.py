@@ -23,8 +23,8 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNEL_ID = os.getenv('CHANNEL_ID')  # Use channel ID here
 RSS_URL = os.getenv('RSS_URL')
 
-# Create a new Pyrogram client
-app = Client("my_bot", bot_token=BOT_TOKEN)
+# Create a new Pyrogram client with API credentials
+app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Caching for sent updates
 sent_updates = deque(maxlen=100)  # Store last 100 sent titles
