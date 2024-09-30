@@ -78,7 +78,7 @@ async def fetch_and_send_updates():
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
     logging.info(f"Start command received from {message.chat.id}")
-    button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url=f"https://t.me/Anime_NewsFeeds)]])
+    button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url="https://t.me/Anime_NewsFeeds")]])
     await app.send_message(
         chat_id=message.chat.id,
         text="Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
