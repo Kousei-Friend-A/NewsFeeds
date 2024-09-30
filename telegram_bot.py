@@ -6,6 +6,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import asyncio
 from collections import deque
+from pyrogram.errors import FloodWait
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -50,47 +51,49 @@ async def fetch_and_send_updates():
             for entry in feed.entries:
                 title = entry.title
 
-                # Check if the title has already been sent
                 if title not in sent_updates:
                     sent_updates.append(title)
                     youtube_link = entry.link if "youtube.com" in entry.link else None
 
+                    # Prepare to send the image
+                    image_url = None
+                    if 'media_thumbnail' in entry:
+                        image_url = entry.media_thumbnail[0]['url']
+                    elif 'enclosure' in entry:
+                        image_url = entry.enclosure.url
+
+                    if image_url:
+                        if image_url.endswith("/large.jpg"):
+                            image_url = image_url[:-10]
+
+                        logging.info(f"Using image URL: {image_url}")
+                        image_path = await download_image(image_url, title)
+                        if image_path:
+                            await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
+                            logging.info(f"Sent image with title: {title}")
+                            os.remove(image_path)
+                        else:
+                            logging.warning(f"Image download failed for: {title}")
+
                     if youtube_link:
-                        # Create a button for More Info
                         button = InlineKeyboardMarkup(
                             [[InlineKeyboardButton("More Info", url=youtube_link)]]
                         )
                         await app.send_message(chat_id=CHANNEL_ID, text=title, reply_markup=button)
-                    else:
-                        # Get the media thumbnail URL first
-                        image_url = None
-                        if 'media_thumbnail' in entry:
-                            image_url = entry.media_thumbnail[0]['url']
-                        elif 'enclosure' in entry:
-                            image_url = entry.enclosure.url
-
-                        if image_url:
-                            # Remove "/large.jpg" from the URL if it exists
-                            if image_url.endswith("/large.jpg"):
-                                image_url = image_url[:-10]  # Remove the last 10 characters
-
-                            logging.info(f"Using image URL: {image_url}")
-                            image_path = await download_image(image_url, title)
-                            if image_path:
-                                await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
-                                logging.info(f"Sent image with title: {title}")
-                                os.remove(image_path)
-                            else:
-                                logging.warning(f"Image download failed for: {title}")
 
                     logging.info(f"Sent update for: {title}")
+                    await asyncio.sleep(2)  # Adjust this value as needed
 
             logging.info("Waiting for the next update...")
             await asyncio.sleep(600)  # Wait before fetching again
 
+        except FloodWait as e:
+            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
+            await asyncio.sleep(e.x)  # Wait for the required time
+
         except Exception as e:
             logging.error(f"An error occurred: {e}")
-            await asyncio.sleep(60)
+            await asyncio.sleep(60)  # Wait before retrying
 
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
