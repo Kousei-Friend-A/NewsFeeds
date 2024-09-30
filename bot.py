@@ -20,11 +20,26 @@ BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
 CHANNEL_ID = '@Anime_NewsFeeds'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
+# Path to the file storing sent updates
+SENT_UPDATES_FILE = "sent_updates.txt"
+
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+# Load sent updates from the file
+def load_sent_updates():
+    if os.path.exists(SENT_UPDATES_FILE):
+        with open(SENT_UPDATES_FILE, 'r') as file:
+            return set(line.strip() for line in file)
+    return set()
+
+# Save a new title to the file
+def save_sent_update(title):
+    with open(SENT_UPDATES_FILE, 'a') as file:
+        file.write(title + '\n')
+
 # Caching for sent updates
-sent_updates = deque(maxlen=20)
+sent_updates = load_sent_updates()
 
 # Function to sanitize the filename
 def sanitize_filename(title):
@@ -59,7 +74,9 @@ async def fetch_and_send_updates():
                 title = entry.title
 
                 if title not in sent_updates:
-                    sent_updates.append(title)
+                    sent_updates.add(title)  # Add the title to the set
+                    save_sent_update(title)  # Save to file
+
                     youtube_link = entry.link if "youtube.com" in entry.link else None
 
                     image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
@@ -71,7 +88,7 @@ async def fetch_and_send_updates():
                     image_path = await download_image(image_url, title)
 
                     if image_path:
-                        caption = f"💫 {title}"  # Add the emoji to the caption
+                        caption = f"💫 {title}"
                         reply_markup = []
                         if youtube_link:
                             reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
