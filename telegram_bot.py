@@ -3,7 +3,8 @@ import feedparser
 import requests
 import logging
 from pytube import YouTube
-from pyrogram import Client, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram import Client
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import time
 from dotenv import load_dotenv
 from collections import deque
