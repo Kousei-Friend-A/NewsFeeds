@@ -59,7 +59,7 @@ async def fetch_and_send_updates():
                         )
                         await app.send_message(chat_id=CHANNEL_ID, text=title, reply_markup=button)
                     else:
-                        # Look for media:thumbnail URL
+                        # Get the media thumbnail URL first
                         image_url = None
                         if 'media_thumbnail' in entry:
                             image_url = entry.media_thumbnail[0]['url']
@@ -71,10 +71,14 @@ async def fetch_and_send_updates():
                             if image_url.endswith("/large.jpg"):
                                 image_url = image_url[:-10]  # Remove the last 10 characters
 
+                            logging.info(f"Using image URL: {image_url}")
                             image_path = await download_image(image_url, title)
                             if image_path:
                                 await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
+                                logging.info(f"Sent image with title: {title}")
                                 os.remove(image_path)
+                            else:
+                                logging.warning(f"Image download failed for: {title}")
 
                     logging.info(f"Sent update for: {title}")
 
