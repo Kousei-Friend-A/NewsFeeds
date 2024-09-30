@@ -2,7 +2,6 @@ import os
 import feedparser
 import requests
 import logging
-import yt_dlp
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import asyncio
@@ -39,26 +38,6 @@ async def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
-async def download_youtube_video(video_url):
-    try:
-        logging.info(f"Downloading video from {video_url}")
-        ydl_opts = {
-            'format': 'best',
-            'outtmpl': '%(title)s.%(ext)s',
-            'noplaylist': True,
-            'cookies': 'cookies.txt',  # Path to your cookies file
-            'quiet': False,
-        }
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            file_path = f"{info['title']}.{info['ext']}"
-            logging.info(f"Downloaded video: {file_path}")
-            return file_path
-    except Exception as e:
-        logging.error(f"Failed to download video from {video_url}: {e}")
-        return None
-
 async def fetch_and_send_updates():
     while True:
         try:
@@ -74,10 +53,11 @@ async def fetch_and_send_updates():
                     youtube_link = entry.link if "youtube.com" in entry.link else None
 
                     if youtube_link:
-                        video_path = await download_youtube_video(youtube_link)
-                        if video_path:
-                            await app.send_video(chat_id=CHANNEL_ID, video=video_path, caption=title)
-                            os.remove(video_path)
+                        # Create a button for More Info
+                        button = InlineKeyboardMarkup(
+                            [[InlineKeyboardButton("More Info", url=youtube_link)]]
+                        )
+                        await app.send_message(chat_id=CHANNEL_ID, text=title, reply_markup=button)
                     else:
                         image_url = entry.enclosure.url if 'enclosure' in entry else None
                         if image_url:
@@ -98,7 +78,7 @@ async def fetch_and_send_updates():
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
     logging.info(f"Start command received from {message.chat.id}")
-    button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url=f"tg://resolve?domain={CHANNEL_ID}")]])
+    button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url=f"https://t.me/Anime_NewsFeeds)]])
     await app.send_message(
         chat_id=message.chat.id,
         text="Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
