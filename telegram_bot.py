@@ -69,17 +69,20 @@ async def fetch_and_send_updates():
                         logging.info(f"Using image URL: {image_url}")
                         image_path = await download_image(image_url, title)
                         if image_path:
-                            await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=title)
+                            # Create the message caption
+                            caption = title
+                            if youtube_link:
+                                button = InlineKeyboardMarkup(
+                                    [[InlineKeyboardButton("More Info", url=youtube_link)]]
+                                )
+                                await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=caption, reply_markup=button)
+                            else:
+                                await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=caption)
+
                             logging.info(f"Sent image with title: {title}")
                             os.remove(image_path)
                         else:
                             logging.warning(f"Image download failed for: {title}")
-
-                    if youtube_link:
-                        button = InlineKeyboardMarkup(
-                            [[InlineKeyboardButton("More Info", url=youtube_link)]]
-                        )
-                        await app.send_message(chat_id=CHANNEL_ID, text=title, reply_markup=button)
 
                     logging.info(f"Sent update for: {title}")
                     await asyncio.sleep(2)  # Adjust this value as needed
