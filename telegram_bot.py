@@ -51,7 +51,7 @@ async def download_image(image_url, title):
 async def download_youtube_video(youtube_link):
     try:
         ydl_opts = {
-            'format': 'bestvideo/bestaudio/best',
+            'format': 'bestvideo+bestaudio/best',
             'outtmpl': '%(title)s.%(ext)s',
             'cookiefile': 'cookies.txt',
             'quiet': True,
@@ -60,7 +60,7 @@ async def download_youtube_video(youtube_link):
         logging.info(f"Downloading YouTube video from {youtube_link}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(youtube_link, download=True)
-            video_path = f"{sanitize_filename(info['title'])}.{info['ext']}"
+            video_path = f"{sanitize_filename(info['title'])}.mp4"
             logging.info(f"Downloaded YouTube video: {video_path}")
             return video_path
     except Exception as e:
@@ -95,7 +95,8 @@ async def fetch_and_send_updates():
                             await app.send_video(
                                 chat_id=CHANNEL_ID,
                                 video=video_path,
-                                caption=caption
+                                caption=caption,
+                                supports_streaming=True  # Stream format
                             )
                             os.remove(video_path)  # Cleanup the video after sending
                             logging.info(f"Sent YouTube video with title: {title}")
