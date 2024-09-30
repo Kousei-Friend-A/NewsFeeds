@@ -53,7 +53,7 @@ async def download_youtube_video(youtube_link):
         ydl_opts = {
             'format': 'bestvideo/bestaudio/best',
             'outtmpl': '%(title)s.%(ext)s',
-            'cookiefile': 'cookies.txt',  # Use the cookies file here
+            'cookiefile': 'cookies.txt',
             'quiet': True,
         }
         
@@ -90,7 +90,7 @@ async def fetch_and_send_updates():
                     if youtube_link:
                         # Download the YouTube video
                         video_path = await download_youtube_video(youtube_link)
-                        if video_path:
+                        if video_path and os.path.exists(video_path):
                             caption = f"**{title}** 💫"  # Bold the title
                             await app.send_video(
                                 chat_id=CHANNEL_ID,
@@ -99,6 +99,8 @@ async def fetch_and_send_updates():
                             )
                             os.remove(video_path)  # Cleanup the video after sending
                             logging.info(f"Sent YouTube video with title: {title}")
+                        else:
+                            logging.error(f"Video path is invalid: {video_path}")
                     else:
                         logging.info(f"Using image URL: {image_url}")
                         image_path = await download_image(image_url, title)
