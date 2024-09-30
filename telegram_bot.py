@@ -57,6 +57,7 @@ async def download_youtube_video(youtube_link):
                 'key': 'FFmpegVideoConvertor',
                 'preferedformat': 'mp4',
             }],
+            'cookiefile': 'cookies.txt',  # Add this line if using cookies
             'quiet': True,
         }
         
@@ -94,7 +95,7 @@ async def fetch_and_send_updates():
                         # Download the YouTube video
                         video_path = await download_youtube_video(youtube_link)
                         if video_path:
-                            caption = f"{title} 💫"
+                            caption = f"**{title}** 💫"  # Bold the title
                             await app.send_video(
                                 chat_id=CHANNEL_ID,
                                 video=video_path,
@@ -107,16 +108,11 @@ async def fetch_and_send_updates():
                         image_path = await download_image(image_url, title)
 
                         if image_path:
-                            caption = f"{title} 💫"
-                            reply_markup = []
-                            if youtube_link:
-                                reply_markup.append([InlineKeyboardButton("More Info", url=youtube_link)])
-
+                            caption = f"**{title}** 💫"  # Bold the title
                             await app.send_photo(
                                 chat_id=CHANNEL_ID,
                                 photo=image_path,
-                                caption=caption,
-                                reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
+                                caption=caption
                             )
                             logging.info(f"Sent image with title: {title}")
                             os.remove(image_path)  # Cleanup the image after sending
