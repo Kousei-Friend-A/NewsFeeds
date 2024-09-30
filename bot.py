@@ -22,6 +22,7 @@ RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Path to the file storing the last sent update timestamp
 LAST_SENT_TIMESTAMP_FILE = "last_sent_timestamp.txt"
+SENT_UPDATES_FILE = "sent_updates.txt"
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -30,13 +31,25 @@ app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 def load_last_sent_timestamp():
     if os.path.exists(LAST_SENT_TIMESTAMP_FILE):
         with open(LAST_SENT_TIMESTAMP_FILE, 'r') as file:
-            return parser.parse(file.read().strip())  # Parse to datetime
+            return parser.parse(file.read().strip())
     return None
 
 # Save the last sent timestamp to the file
 def save_last_sent_timestamp(timestamp):
     with open(LAST_SENT_TIMESTAMP_FILE, 'w') as file:
-        file.write(timestamp.isoformat())  # Save in ISO format
+        file.write(timestamp.isoformat())
+
+# Load sent updates from the file
+def load_sent_updates():
+    if os.path.exists(SENT_UPDATES_FILE):
+        with open(SENT_UPDATES_FILE, 'r') as file:
+            return set(line.strip() for line in file)
+    return set()
+
+# Save a new title to the file
+def save_sent_update(title):
+    with open(SENT_UPDATES_FILE, 'a') as file:
+        file.write(title + '\n')
 
 # Function to sanitize the filename
 def sanitize_filename(title):
@@ -61,6 +74,7 @@ async def download_image(image_url, title):
 
 async def fetch_and_send_updates():
     last_sent_timestamp = load_last_sent_timestamp()
+    sent_updates = load_sent_updates()  # Load previously sent updates
     
     while True:
         try:
@@ -76,14 +90,19 @@ async def fetch_and_send_updates():
 
                 # Get the publication date if available, else set to None
                 published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
+                title = entry.title
+                guid = entry.guid if hasattr(entry, 'guid') else title  # Use GUID or title if GUID is missing
 
-                # Add entry to the list to send
-                latest_entries.append(entry)
+                # Add entry to the list to send if not already sent
+                if guid not in sent_updates:
+                    latest_entries.append(entry)
 
             for entry in latest_entries:
                 title = entry.title
+                guid = entry.guid if hasattr(entry, 'guid') else title
+                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
-                # Use the published date if available, otherwise skip the timestamp check
+                # Send the entry
                 if published and (last_sent_timestamp is None or published > last_sent_timestamp):
                     last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
                     save_last_sent_timestamp(last_sent_timestamp)
@@ -111,6 +130,10 @@ async def fetch_and_send_updates():
                     )
                     logging.info(f"Sent image with title: {title}")
                     os.remove(image_path)  # Cleanup the image after sending
+
+                    # Save the sent update
+                    sent_updates.add(guid)
+                    save_sent_update(guid)  # Store the GUID or title of the sent update
                 else:
                     logging.warning(f"Image download failed for: {title}")
 
