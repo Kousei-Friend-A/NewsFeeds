@@ -3,3 +3,4 @@ tgcrypto
 feedparser
 requests
 aiohttp
+python-dateutil
