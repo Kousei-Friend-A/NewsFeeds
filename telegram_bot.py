@@ -100,8 +100,6 @@ async def fetch_and_send_updates():
                             )
                             os.remove(video_path)  # Cleanup the video after sending
                             logging.info(f"Sent YouTube video with title: {title}")
-                        else:
-                            logging.error(f"Video path is invalid: {video_path}")
                     else:
                         logging.info(f"Using image URL: {image_url}")
                         image_path = await download_image(image_url, title)
@@ -119,6 +117,9 @@ async def fetch_and_send_updates():
                             logging.warning(f"Image download failed for: {title}")
 
                     new_updates_count += 1
+                    
+                    # Add a delay to prevent rate limiting
+                    await asyncio.sleep(3)  # Adjust this value as needed
 
             if new_updates_count > 0:
                 logging.info(f"Sent {new_updates_count} updates.")
