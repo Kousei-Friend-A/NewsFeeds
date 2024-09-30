@@ -19,6 +19,7 @@ API_HASH = "e2e9b22c6522465b62d8445840a526b1"
 BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
 CHANNEL_ID = '@Anime_NewsFeeds'  # Use the channel username
 RSS_URL = "https://www.livechart.me/feeds/headlines"
+COOKIES_FILE = "cookies.txt"  # Path to your cookies file
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -50,6 +51,7 @@ async def download_youtube_video(video_url):
             'format': 'best',
             'outtmpl': '%(title)s.%(ext)s',
             'noplaylist': True,
+            'cookies': COOKIES_FILE,  # Load cookies from the specified file
             'quiet': True,
         }
         
@@ -127,6 +129,15 @@ async def start(client, message):
     )
 
 if __name__ == '__main__':
-    with app:
-        logging.info("Bot is starting...")
-        app.run(fetch_and_send_updates())
+    while True:
+        try:
+            with app:
+                logging.info("Bot is starting...")
+                app.run(fetch_and_send_updates())
+            break  # Exit loop if no exceptions occur
+        except FloodWait as e:
+            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds before retrying.")
+            await asyncio.sleep(e.x)  # Wait for the required time
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+            await asyncio.sleep(10)  # Wait before retrying
