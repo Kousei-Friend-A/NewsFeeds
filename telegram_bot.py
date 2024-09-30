@@ -15,10 +15,10 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Directly set your configuration here
-API_ID = 8143727
-API_HASH = "e2e9b22c6522465b62d8445840a526b1"
-BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
-CHANNEL_ID = '@Anime_NewsFeeds'
+API_ID = 12321125
+API_HASH = "6a34b69aa63177ec36f8d9b24c296f40"
+BOT_TOKEN = "6315185069:AAGeIwcUzw66keUM6o0Mtv9sytWQWH_WhMI"
+CHANNEL_ID = 'Elvazo'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Create a new Pyrogram client with API credentials
