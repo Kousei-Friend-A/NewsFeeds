@@ -3,6 +3,7 @@ import feedparser
 import aiohttp
 import logging
 import asyncio
+import yt_dlp
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from collections import deque
@@ -47,6 +48,28 @@ async def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
+async def download_youtube_video(youtube_link):
+    try:
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': '%(title)s.%(ext)s',
+            'postprocessors': [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4',
+            }],
+            'quiet': True,
+        }
+        
+        logging.info(f"Downloading YouTube video from {youtube_link}")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(youtube_link, download=True)
+            video_path = f"{sanitize_filename(info['title'])}.mp4"
+            logging.info(f"Downloaded YouTube video: {video_path}")
+            return video_path
+    except Exception as e:
+        logging.error(f"Failed to download YouTube video: {e}")
+        return None
+
 async def fetch_and_send_updates():
     while True:
         try:
@@ -67,17 +90,38 @@ async def fetch_and_send_updates():
                     if image_url and image_url.endswith("/large.jpg"):
                         image_url = image_url[:-10]
 
-                    logging.info(f"Using image URL: {image_url}")
-                    image_path = await download_image(image_url, title)
-
-                    if image_path:
-                        caption = title
-                        button = InlineKeyboardMarkup([[InlineKeyboardButton("More Info", url=youtube_link)]] if youtube_link else [])
-                        await app.send_photo(chat_id=CHANNEL_ID, photo=image_path, caption=caption, reply_markup=button)
-                        logging.info(f"Sent image with title: {title}")
-                        os.remove(image_path)  # Cleanup the image after sending
+                    if youtube_link:
+                        # Download the YouTube video
+                        video_path = await download_youtube_video(youtube_link)
+                        if video_path:
+                            caption = f"{title} 💫"
+                            await app.send_video(
+                                chat_id=CHANNEL_ID,
+                                video=video_path,
+                                caption=caption
+                            )
+                            os.remove(video_path)  # Cleanup the video after sending
+                            logging.info(f"Sent YouTube video with title: {title}")
                     else:
-                        logging.warning(f"Image download failed for: {title}")
+                        logging.info(f"Using image URL: {image_url}")
+                        image_path = await download_image(image_url, title)
+
+                        if image_path:
+                            caption = f"{title} 💫"
+                            reply_markup = []
+                            if youtube_link:
+                                reply_markup.append([InlineKeyboardButton("More Info", url=youtube_link)])
+
+                            await app.send_photo(
+                                chat_id=CHANNEL_ID,
+                                photo=image_path,
+                                caption=caption,
+                                reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
+                            )
+                            logging.info(f"Sent image with title: {title}")
+                            os.remove(image_path)  # Cleanup the image after sending
+                        else:
+                            logging.warning(f"Image download failed for: {title}")
 
                     new_updates_count += 1
 
