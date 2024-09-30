@@ -69,42 +69,49 @@ async def fetch_and_send_updates():
             feed = feedparser.parse(RSS_URL)
 
             new_updates_count = 0
+            latest_entries = []  # List to hold the latest five updates
 
             for entry in feed.entries:
                 title = entry.title
 
                 if title not in sent_updates:
-                    sent_updates.add(title)  # Add the title to the set
-                    save_sent_update(title)  # Save to file
+                    latest_entries.append(entry)
+                    if len(latest_entries) >= 5:
+                        break
 
-                    youtube_link = entry.link if "youtube.com" in entry.link else None
+            for entry in latest_entries:
+                title = entry.title
+                sent_updates.add(title)  # Add the title to the set
+                save_sent_update(title)  # Save to file
 
-                    image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
+                youtube_link = entry.link if "youtube.com" in entry.link else None
 
-                    if image_url and image_url.endswith("/large.jpg"):
-                        image_url = image_url[:-10]
+                image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
 
-                    logging.info(f"Using image URL: {image_url}")
-                    image_path = await download_image(image_url, title)
+                if image_url and image_url.endswith("/large.jpg"):
+                    image_url = image_url[:-10]
 
-                    if image_path:
-                        caption = f"💫 {title}"
-                        reply_markup = []
-                        if youtube_link:
-                            reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
+                logging.info(f"Using image URL: {image_url}")
+                image_path = await download_image(image_url, title)
 
-                        await app.send_photo(
-                            chat_id=CHANNEL_ID,
-                            photo=image_path,
-                            caption=caption,
-                            reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
-                        )
-                        logging.info(f"Sent image with title: {title}")
-                        os.remove(image_path)  # Cleanup the image after sending
-                    else:
-                        logging.warning(f"Image download failed for: {title}")
+                if image_path:
+                    caption = f"💫 {title}"
+                    reply_markup = []
+                    if youtube_link:
+                        reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
 
-                    new_updates_count += 1
+                    await app.send_photo(
+                        chat_id=CHANNEL_ID,
+                        photo=image_path,
+                        caption=caption,
+                        reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
+                    )
+                    logging.info(f"Sent image with title: {title}")
+                    os.remove(image_path)  # Cleanup the image after sending
+                else:
+                    logging.warning(f"Image download failed for: {title}")
+
+                new_updates_count += 1
 
             if new_updates_count > 0:
                 logging.info(f"Sent {new_updates_count} updates.")
