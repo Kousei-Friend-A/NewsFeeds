@@ -1,0 +1,14 @@
+domain  expirationDate  hostOnly  httpOnly  name  path  sameSite  secure  session  storeId  value
+.youtube.com  1743236551.160933  false  true  __Secure-3PSID  /  no_restriction  true  false    g.a000ogiBjik0Xq1GB7FM0Otd-dWqyMHMwe04XyWU_Jx_v9ilqF1VIl6EYf5yj3VL6UiDSOVutwACgYKAcESAQASFQHGX2Miftm2T6i7qj9v_Z2xT7gDjBoVAUF8yKrOtu_4fUyVXANzEz4sBvwU0076
+.youtube.com  1727686149.397308  false  true  GPS  /    true  false    1
+.youtube.com  1743236551.160693  false  true  __Secure-1PSIDTS  /    true  false    sidts-CjIBQlrA-PMZr5LAAUcwGbBYKFno5CtetRhCQ2Z9u6To_6GxQ55JI9URo-UH9nL1AeHWlhAA
+.youtube.com  1743236551.161099  false  false  SAPISID  /    true  false    Nt9mLsvPtBgIeOB8/ATwOX8QFg5n7ZzfX1
+.youtube.com  1743236753.056747  false  true  __Secure-1PSIDCC  /    true  false    AKEyXzX_EeXtEq-EXTE_OL8E54wzXA1fngY67gWFTDgD1zaERuKAayqUYZpCeKsxabg8cKEr7A
+.youtube.com  1743236551.16102  false  true  SSID  /    true  false    A73uCrZ1ATAXGLK0z
+.youtube.com  1743236551.16114  false  false  __Secure-1PAPISID  /    true  false    Nt9mLsvPtBgIeOB8/ATwOX8QFg5n7ZzfX1
+.youtube.com  1743236551.16087  false  true  __Secure-1PSID  /    true  false    g.a000ogiBjik0Xq1GB7FM0Otd-dWqyMHMwe04XyWU_Jx_v9ilqF1VBNvX5T2OxRFylmVfj_4aOwACgYKAfESAQASFQHGX2Mi01lvbdJ080jZJF5EMduyOhoVAUF8yKqWzdOzsPrPlV7qlqqvUXXw0076
+.youtube.com  1743236551.16118  false  false  __Secure-3PAPISID  /  no_restriction  true  false    Nt9mLsvPtBgIeOB8/ATwOX8QFg5n7ZzfX1
+.youtube.com  1743236753.056885  false  true  __Secure-3PSIDCC  /  no_restriction  true  false    AKEyXzW7_bs-gh6SBuzsZGFj_ZV1w4n6o3z5QDNS7En2dYvSoHEpWQzAwugUyxfYZp4h_uvr
+.youtube.com  1743236551.160783  false  true  __Secure-3PSIDTS  /  no_restriction  true  false    sidts-CjIBQlrA-PMZr5LAAUcwGbBYKFno5CtetRhCQ2Z9u6To_6GxQ55JI9URo-UH9nL1AeHWlhAA
+.youtube.com  1743236552.98269  false  true  LOGIN_INFO  /  no_restriction  true  false    AFmmF2swRQIgCCTvZCxphjqlWIxHUw45U_Ty3uCXYDD20isYC7bOBC0CIQDRwX0WCRb_gkZuBGqScPlxmw8XFALVXY1FRMSbiYKhdg:QUQ3MjNmeDMxVDJNU19tMzNEam0yU3M2T1hrVDdlaU5JSXp5SmxtTEVGdDRYZFNTSUIxM1dsQW5memlFcUpjekxHbmtvdUlmTm1CR21RMi0tdjdiS29DQXI3cmQtZG1sN29TREl2d01RODB2ODQxeVFscGhMMERPOFc3bmVocXNnUkd0UktYV2dmUEFsenk1MWZtbDlKeUl5ZGxPRFBZODB3
+.youtube.com  1728289555.096729  false  false  PREF  /    true  false    f6=40000000&tz=Asia.Colombo
