@@ -5,9 +5,9 @@ import logging
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from collections import deque
 from pyrogram.errors import FloodWait
 import re
+from dateutil import parser
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -20,26 +20,23 @@ BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
 CHANNEL_ID = '@Anime_NewsFeeds'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
-# Path to the file storing sent updates
-SENT_UPDATES_FILE = "sent_updates.txt"
+# Path to the file storing the last sent update timestamp
+LAST_SENT_TIMESTAMP_FILE = "last_sent_timestamp.txt"
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Load sent updates from the file
-def load_sent_updates():
-    if os.path.exists(SENT_UPDATES_FILE):
-        with open(SENT_UPDATES_FILE, 'r') as file:
-            return set(line.strip() for line in file)
-    return set()
+# Load last sent timestamp from the file
+def load_last_sent_timestamp():
+    if os.path.exists(LAST_SENT_TIMESTAMP_FILE):
+        with open(LAST_SENT_TIMESTAMP_FILE, 'r') as file:
+            return parser.parse(file.read().strip())  # Parse to datetime
+    return None
 
-# Save a new title to the file
-def save_sent_update(title):
-    with open(SENT_UPDATES_FILE, 'a') as file:
-        file.write(title + '\n')
-
-# Caching for sent updates
-sent_updates = load_sent_updates()
+# Save the last sent timestamp to the file
+def save_last_sent_timestamp(timestamp):
+    with open(LAST_SENT_TIMESTAMP_FILE, 'w') as file:
+        file.write(timestamp.isoformat())  # Save in ISO format
 
 # Function to sanitize the filename
 def sanitize_filename(title):
@@ -63,29 +60,32 @@ async def download_image(image_url, title):
         return None
 
 async def fetch_and_send_updates():
+    last_sent_timestamp = load_last_sent_timestamp()
+    
     while True:
         try:
             logging.info("Fetching RSS feed...")
             feed = feedparser.parse(RSS_URL)
 
             new_updates_count = 0
-            latest_entries = []  # List to hold the latest five updates
+            latest_entries = []
 
             for entry in feed.entries:
-                title = entry.title
+                published = parser.parse(entry.pubDate)  # Parse the publication date
 
-                if title not in sent_updates:
+                if last_sent_timestamp is None or published > last_sent_timestamp:
                     latest_entries.append(entry)
                     if len(latest_entries) >= 5:
                         break
 
             for entry in latest_entries:
                 title = entry.title
-                sent_updates.add(title)  # Add the title to the set
-                save_sent_update(title)  # Save to file
+                published = parser.parse(entry.pubDate)  # Parse again for the sent entry
+
+                last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
+                save_last_sent_timestamp(last_sent_timestamp)
 
                 youtube_link = entry.link if "youtube.com" in entry.link else None
-
                 image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
 
                 if image_url and image_url.endswith("/large.jpg"):
