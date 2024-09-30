@@ -3,7 +3,6 @@ import feedparser
 import aiohttp
 import logging
 import asyncio
-import yt_dlp
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from collections import deque
@@ -11,21 +10,21 @@ from pyrogram.errors import FloodWait
 import re
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, 
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Directly set your configuration here
-API_ID = 12321125
-API_HASH = "6a34b69aa63177ec36f8d9b24c296f40"
-BOT_TOKEN = "6315185069:AAGeIwcUzw66keUM6o0Mtv9sytWQWH_WhMI"
-CHANNEL_ID = 'Elvazo'
+API_ID = 8143727
+API_HASH = "e2e9b22c6522465b62d8445840a526b1"
+BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
+CHANNEL_ID = '@Anime_NewsFeeds'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Caching for sent updates
-sent_updates = deque(maxlen=100)
+sent_updates = deque(maxlen=20)
 
 # Function to sanitize the filename
 def sanitize_filename(title):
@@ -34,7 +33,7 @@ def sanitize_filename(title):
 async def download_image(image_url, title):
     sanitized_title = sanitize_filename(title)
     file_path = f"{sanitized_title}.jpg"
-    
+
     try:
         logging.info(f"Downloading image from {image_url}")
         async with aiohttp.ClientSession() as session:
@@ -46,34 +45,6 @@ async def download_image(image_url, title):
         return file_path
     except Exception as e:
         logging.error(f"Failed to download image: {e}")
-        return None
-
-async def download_youtube_video(youtube_link):
-    try:
-        ydl_opts = {
-            'format': 'best[ext=mp4]',
-            'outtmpl': '%(title)s.%(ext)s',
-            'noplaylist': True,
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }],
-            'quiet': True,
-            'verbose': True,  # Enable verbose logging for debugging
-        }
-
-        logging.info(f"Downloading YouTube video from {youtube_link}")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(youtube_link, download=True)
-            video_path = f"{sanitize_filename(info['title'])}.mp4"
-            if os.path.exists(video_path):
-                logging.info(f"Downloaded YouTube video: {video_path}")
-                return video_path
-            else:
-                logging.error("Video path does not exist after download.")
-                return None
-    except Exception as e:
-        logging.error(f"Failed to download YouTube video: {e}")
         return None
 
 async def fetch_and_send_updates():
@@ -96,35 +67,25 @@ async def fetch_and_send_updates():
                     if image_url and image_url.endswith("/large.jpg"):
                         image_url = image_url[:-10]
 
-                    if youtube_link:
-                        # Download the YouTube video
-                        video_path = await download_youtube_video(youtube_link)
-                        if video_path and os.path.exists(video_path):
-                            caption = f"**{title}** 💫"  # Bold the title
-                            await app.send_video(
-                                chat_id=CHANNEL_ID,
-                                video=video_path,
-                                caption=caption
-                            )
-                            os.remove(video_path)  # Cleanup the video after sending
-                            logging.info(f"Sent YouTube video with title: {title}")
-                        else:
-                            logging.error(f"Video path is invalid: {video_path}")
-                    else:
-                        logging.info(f"Using image URL: {image_url}")
-                        image_path = await download_image(image_url, title)
+                    logging.info(f"Using image URL: {image_url}")
+                    image_path = await download_image(image_url, title)
 
-                        if image_path:
-                            caption = f"**{title}** 💫"  # Bold the title
-                            await app.send_photo(
-                                chat_id=CHANNEL_ID,
-                                photo=image_path,
-                                caption=caption
-                            )
-                            logging.info(f"Sent image with title: {title}")
-                            os.remove(image_path)  # Cleanup the image after sending
-                        else:
-                            logging.warning(f"Image download failed for: {title}")
+                    if image_path:
+                        caption = f"💫 {title}"  # Add the emoji to the caption
+                        reply_markup = []
+                        if youtube_link:
+                            reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
+
+                        await app.send_photo(
+                            chat_id=CHANNEL_ID,
+                            photo=image_path,
+                            caption=caption,
+                            reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
+                        )
+                        logging.info(f"Sent image with title: {title}")
+                        os.remove(image_path)  # Cleanup the image after sending
+                    else:
+                        logging.warning(f"Image download failed for: {title}")
 
                     new_updates_count += 1
 
