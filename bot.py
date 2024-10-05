@@ -3,10 +3,11 @@ import feedparser
 import aiohttp
 import logging
 import asyncio
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.errors import FloodWait
 import re
-from datetime import datetime
-from pyrofork import Client, filters
-from pyrofork.types import InlineKeyboardButton, InlineKeyboardMarkup
+from dateutil import parser
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -23,14 +24,14 @@ RSS_URL = "https://www.livechart.me/feeds/headlines"
 LAST_SENT_TIMESTAMP_FILE = "last_sent_timestamp.txt"
 SENT_UPDATES_FILE = "sent_updates.txt"
 
-# Create a new PyroFork client with API credentials
+# Create a new Pyrogram client with API credentials
 app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Load last sent timestamp from the file
 def load_last_sent_timestamp():
     if os.path.exists(LAST_SENT_TIMESTAMP_FILE):
         with open(LAST_SENT_TIMESTAMP_FILE, 'r') as file:
-            return datetime.fromisoformat(file.read().strip())
+            return parser.parse(file.read().strip())
     return None
 
 # Save the last sent timestamp to the file
@@ -90,7 +91,7 @@ async def fetch_and_send_updates():
                 logging.debug(f"Feed Entry: {entry}")
 
                 # Get the publication date if available, else set to None
-                published = datetime.fromisoformat(entry.published) if hasattr(entry, 'published') else None
+                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
                 title = entry.title
                 guid = entry.guid if hasattr(entry, 'guid') else title  # Use GUID or title if GUID is missing
 
@@ -101,7 +102,7 @@ async def fetch_and_send_updates():
             for entry in latest_entries:
                 title = entry.title
                 guid = entry.guid if hasattr(entry, 'guid') else title
-                published = datetime.fromisoformat(entry.published) if hasattr(entry, 'published') else None
+                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
                 # Send the entry if published date is valid
                 if published and (last_sent_timestamp is None or published > last_sent_timestamp):
@@ -147,6 +148,9 @@ async def fetch_and_send_updates():
 
             await asyncio.sleep(600)  # Wait before fetching again
 
+        except FloodWait as e:
+            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
+            await asyncio.sleep(e.x)
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(60)
@@ -164,5 +168,6 @@ async def start(client, message):
 
 # Main execution
 if __name__ == '__main__':
-    logging.info("Bot is starting...")
-    app.run(fetch_and_send_updates())
+    with app:
+        logging.info("Bot is starting...")
+        app.run(fetch_and_send_updates())
