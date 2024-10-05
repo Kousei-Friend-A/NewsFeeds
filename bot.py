@@ -67,7 +67,7 @@ def download_image(image_url, title):
         return None
 
 # Function to fetch and send updates
-def fetch_and_send_updates(context: CallbackContext):
+async def fetch_and_send_updates(context: CallbackContext):
     last_sent_timestamp = load_last_sent_timestamp()
     sent_updates = load_sent_updates()  # Load previously sent updates
 
@@ -116,7 +116,7 @@ def fetch_and_send_updates(context: CallbackContext):
                 reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
 
             # Send the image with caption to the channel
-            context.bot.send_photo(
+            await context.bot.send_photo(
                 chat_id=CHANNEL_ID,
                 photo=open(image_path, 'rb'),
                 caption=caption,
@@ -139,10 +139,10 @@ def fetch_and_send_updates(context: CallbackContext):
         logging.info("No new updates found.")
 
 # Start command handler
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: CallbackContext):
     logging.info(f"Start command received from {update.message.chat_id}")
     button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url="https://t.me/Anime_NewsFeeds")]])
-    update.message.reply_text(
+    await update.message.reply_text(
         "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
         reply_markup=button
     )
@@ -151,15 +151,11 @@ def main():
     # Create the Application and pass it your bot's token
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Get the dispatcher to register handlers
-    dp = application.dispatcher
-
     # Register command handler
-    dp.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("start", start))
 
     # Job to fetch and send updates every 10 minutes
-    job_queue = application.job_queue
-    job_queue.run_repeating(fetch_and_send_updates, interval=600, first=0)
+    application.job_queue.run_repeating(fetch_and_send_updates, interval=600, first=0)
 
     # Start the Bot
     application.run_polling()
