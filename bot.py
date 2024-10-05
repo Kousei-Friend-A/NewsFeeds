@@ -55,6 +55,7 @@ def save_sent_update(title):
 def sanitize_filename(title):
     return re.sub(r'[<>:"/\\|?*\x00-\x1F]', '_', title)
 
+# Download image function
 async def download_image(image_url, title):
     sanitized_title = sanitize_filename(title)
     file_path = f"{sanitized_title}.jpg"
@@ -72,6 +73,7 @@ async def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
+# Function to fetch and send updates
 async def fetch_and_send_updates():
     last_sent_timestamp = load_last_sent_timestamp()
     sent_updates = load_sent_updates()  # Load previously sent updates
@@ -102,7 +104,7 @@ async def fetch_and_send_updates():
                 guid = entry.guid if hasattr(entry, 'guid') else title
                 published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
-                # Send the entry
+                # Send the entry if published date is valid
                 if published and (last_sent_timestamp is None or published > last_sent_timestamp):
                     last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
                     save_last_sent_timestamp(last_sent_timestamp)
@@ -147,12 +149,13 @@ async def fetch_and_send_updates():
             await asyncio.sleep(600)  # Wait before fetching again
 
         except FloodWait as e:
-            logging.warning(f"Flood wait triggered. Waiting for {e.value} seconds.")
-            await asyncio.sleep(e.value)
+            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
+            await asyncio.sleep(e.x)
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(60)
 
+# Start command handler
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
     logging.info(f"Start command received from {message.chat.id}")
@@ -163,6 +166,7 @@ async def start(client, message):
         reply_markup=button
     )
 
+# Main execution
 if __name__ == '__main__':
     with app:
         logging.info("Bot is starting...")
