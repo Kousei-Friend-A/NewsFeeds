@@ -1,6 +1,4 @@
-pyrofork
-tgcrypto
-feedparser
-requests
 aiohttp
+feedparser
 python-dateutil
+pyrofork
