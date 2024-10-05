@@ -4,7 +4,7 @@ import requests
 import logging
 import re
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackContext
 from datetime import datetime
 from dateutil import parser
 
@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Directly set your configuration here
-BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
+BOT_TOKEN = "YOUR_BOT_TOKEN"  # Replace with your bot token
 CHANNEL_ID = '@Anime_NewsFeeds'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
@@ -148,26 +148,23 @@ def start(update: Update, context: CallbackContext):
     )
 
 def main():
-    # Create the Updater and pass it your bot's token
-    updater = Updater(token=BOT_TOKEN, use_context=True)
+    # Create the Application and pass it your bot's token
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+    dp = application.dispatcher
 
     # Register command handler
     dp.add_handler(CommandHandler("start", start))
 
     # Job to fetch and send updates every 10 minutes
-    job_queue = updater.job_queue
+    job_queue = application.job_queue
     job_queue.run_repeating(fetch_and_send_updates, interval=600, first=0)
 
     # Start the Bot
-    updater.start_polling()
+    application.run_polling()
 
     logging.info("Bot started...")
-
-    # Run the bot until you press Ctrl-C
-    updater.idle()
 
 if __name__ == '__main__':
     main()
