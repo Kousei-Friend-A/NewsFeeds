@@ -147,8 +147,8 @@ async def fetch_and_send_updates():
             await asyncio.sleep(600)  # Wait before fetching again
 
         except FloodWait as e:
-            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
-            await asyncio.sleep(e.x)
+            logging.warning(f"Flood wait triggered. Waiting for {e.value} seconds.")
+            await asyncio.sleep(e.value)
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(60)
