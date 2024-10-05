@@ -1,4 +1,4 @@
-pyrogram==2.0.30  # Ensure you use the latest compatible version with your code
-aiohttp==3.8.1    # For asynchronous HTTP requests
-feedparser==6.0.8  # For parsing RSS feeds
-python-dateutil==2.8.2  # For parsing dates
+python-telegram-bot
+feedparser
+requests
+python-dateutil
