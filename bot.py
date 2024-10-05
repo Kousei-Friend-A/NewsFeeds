@@ -3,9 +3,7 @@ import feedparser
 import aiohttp
 import logging
 import asyncio
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from pyrogram.errors import FloodWait
+from telethon import TelegramClient, events, Button  # Import Button
 import re
 from dateutil import parser
 
@@ -24,8 +22,8 @@ RSS_URL = "https://www.livechart.me/feeds/headlines"
 LAST_SENT_TIMESTAMP_FILE = "last_sent_timestamp.txt"
 SENT_UPDATES_FILE = "sent_updates.txt"
 
-# Create a new Pyrogram client with API credentials
-app = Client("my_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# Create a new Telethon client with API credentials
+client = TelegramClient("my_bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
 
 # Load last sent timestamp from the file
 def load_last_sent_timestamp():
@@ -122,13 +120,14 @@ async def fetch_and_send_updates():
                     caption = f"💫 {title}"
                     reply_markup = []
                     if youtube_link:
-                        reply_markup.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
+                        reply_markup.append(Button.url("Watch Trailer", youtube_link))  # Updated button creation
 
-                    await app.send_photo(
-                        chat_id=CHANNEL_ID,
-                        photo=image_path,
+                    # Send the photo using Telethon
+                    await client.send_file(
+                        CHANNEL_ID,
+                        image_path,
                         caption=caption,
-                        reply_markup=InlineKeyboardMarkup(reply_markup) if reply_markup else None
+                        buttons=reply_markup if reply_markup else None  # Fixed button handling
                     )
                     logging.info(f"Sent image with title: {title}")
                     os.remove(image_path)  # Cleanup the image after sending
@@ -148,26 +147,21 @@ async def fetch_and_send_updates():
 
             await asyncio.sleep(600)  # Wait before fetching again
 
-        except FloodWait as e:
-            logging.warning(f"Flood wait triggered. Waiting for {e.x} seconds.")
-            await asyncio.sleep(e.x)
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             await asyncio.sleep(60)
 
 # Start command handler
-@app.on_message(filters.command("start") & filters.private)
-async def start(client, message):
-    logging.info(f"Start command received from {message.chat.id}")
-    button = InlineKeyboardMarkup([[InlineKeyboardButton("Visit Channel", url="https://t.me/Anime_NewsFeeds")]])
-    await app.send_message(
-        chat_id=message.chat.id,
-        text="Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
-        reply_markup=button
+@client.on(events.NewMessage(pattern='/start'))
+async def start(event):
+    logging.info(f"Start command received from {event.chat_id}")
+    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsFeeds")]  # Updated button creation
+    await event.respond(
+        "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
+        buttons=button  # Fixed button handling
     )
 
 # Main execution
 if __name__ == '__main__':
-    with app:
-        logging.info("Bot is starting...")
-        app.run(fetch_and_send_updates())
+    logging.info("Bot is starting...")
+    client.loop.run_until_complete(fetch_and_send_updates())  # Properly run the fetch loop
