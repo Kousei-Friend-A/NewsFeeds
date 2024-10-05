@@ -1,4 +1,6 @@
-python-telegram-bot
+pyrogram
+tgcrypto
 feedparser
 requests
+aiohttp
 python-dateutil
