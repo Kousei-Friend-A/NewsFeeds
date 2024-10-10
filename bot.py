@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO,
 API_ID = 8143727
 API_HASH = "e2e9b22c6522465b62d8445840a526b1"
 BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
-CHANNEL_ID = '@Anime_NewsFeeds'
+CHANNEL_ID = '@Anime_NewsLibrary'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Path to the file storing the last sent update timestamp
