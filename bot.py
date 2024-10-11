@@ -12,10 +12,10 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Directly set your configuration here
-API_ID = 8143727
-API_HASH = "e2e9b22c6522465b62d8445840a526b1"
-BOT_TOKEN = "7735485169:AAEReRLDsc-GshqXOKVveRGtPHpjv13Lrj4"
-CHANNEL_ID = '@Anime_NewsLibrary'
+API_ID = 27332239
+API_HASH = "2fed2c90672125f4c6f42316eed6a837"
+BOT_TOKEN = "7391079505:AAE33ohVv-pPWooCVsOaAoSd81DV9T9mC0Y"
+CHANNEL_ID = '@Anime_NewsLatest'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Path to the file storing the last sent update timestamp
@@ -155,9 +155,9 @@ async def fetch_and_send_updates():
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     logging.info(f"Start command received from {event.chat_id}")
-    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsFeeds")]  # Updated button creation
+    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsLatest")]  # Updated button creation
     await event.respond(
-        "Welcome to the Anime Headlines Bot! Updates will be sent to the channel.",
+        "Welcome to the Anime News Bot! Updates will be sent to the channel.",
         buttons=button  # Fixed button handling
     )
 
