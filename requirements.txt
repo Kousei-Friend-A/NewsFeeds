@@ -1,4 +1,4 @@
-telethon
+pyrogram
 aiohttp
 feedparser
 python-dateutil
