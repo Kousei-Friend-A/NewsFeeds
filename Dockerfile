@@ -1,24 +1,14 @@
-FROM python:3.12-slim
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    libffi-dev \
-    python3-dev \
-    && apt-get clean
+FROM python:3.9-slim
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements file
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install the required packages
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code
+# Copy the rest of your bot files
 COPY . .
 
-# Command to run your application
+# Command to run the bot
 CMD ["python", "bot.py"]
