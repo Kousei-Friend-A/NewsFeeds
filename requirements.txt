@@ -1,4 +1,6 @@
-pyrogram
+telethon
 aiohttp
+python-telegram-bot
 feedparser
 python-dateutil
+flask
