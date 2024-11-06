@@ -1,9 +1,11 @@
 import os
 import feedparser
+from flask import Flask
+from threading import Thread
 import aiohttp
 import logging
 import asyncio
-from telethon import TelegramClient, events, Button  # Import Button
+from telethon import TelegramClient, events, Button
 import re
 from dateutil import parser
 
@@ -15,7 +17,7 @@ logging.basicConfig(level=logging.INFO,
 API_ID = 27332239
 API_HASH = "2fed2c90672125f4c6f42316eed6a837"
 BOT_TOKEN = "7391079505:AAE33ohVv-pPWooCVsOaAoSd81DV9T9mC0Y"
-CHANNEL_ID = '@Anime_NewsLatest'
+CHANNEL_ID = '@anime_newslibrary'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
 # Path to the file storing the last sent update timestamp
@@ -24,6 +26,14 @@ SENT_UPDATES_FILE = "sent_updates.txt"
 
 # Create a new Telethon client with API credentials
 client = TelegramClient("my_bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
+
+# Initialize Flask app
+flask_app = Flask(__name__)
+
+# Define a simple route
+@flask_app.route('/')
+def home():
+    return "Welcome to the Anime News Bot API!"
 
 # Load last sent timestamp from the file
 def load_last_sent_timestamp():
@@ -74,7 +84,7 @@ async def download_image(image_url, title):
 # Function to fetch and send updates
 async def fetch_and_send_updates():
     last_sent_timestamp = load_last_sent_timestamp()
-    sent_updates = load_sent_updates()  # Load previously sent updates
+    sent_updates = load_sent_updates()
     
     while True:
         try:
@@ -85,15 +95,12 @@ async def fetch_and_send_updates():
             latest_entries = []
 
             for entry in feed.entries:
-                # Log the entry for debugging
                 logging.debug(f"Feed Entry: {entry}")
 
-                # Get the publication date if available, else set to None
                 published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
                 title = entry.title
-                guid = entry.guid if hasattr(entry, 'guid') else title  # Use GUID or title if GUID is missing
+                guid = entry.guid if hasattr(entry, 'guid') else title
 
-                # Add entry to the list to send if not already sent
                 if guid not in sent_updates:
                     latest_entries.append(entry)
 
@@ -102,7 +109,6 @@ async def fetch_and_send_updates():
                 guid = entry.guid if hasattr(entry, 'guid') else title
                 published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
-                # Send the entry if published date is valid
                 if published and (last_sent_timestamp is None or published > last_sent_timestamp):
                     last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
                     save_last_sent_timestamp(last_sent_timestamp)
@@ -120,21 +126,19 @@ async def fetch_and_send_updates():
                     caption = f"💫 {title}"
                     reply_markup = []
                     if youtube_link:
-                        reply_markup.append(Button.url("Watch Trailer", youtube_link))  # Updated button creation
+                        reply_markup.append(Button.url("Watch Trailer", youtube_link))
 
-                    # Send the photo using Telethon
                     await client.send_file(
                         CHANNEL_ID,
                         image_path,
                         caption=caption,
-                        buttons=reply_markup if reply_markup else None  # Fixed button handling
+                        buttons=reply_markup if reply_markup else None
                     )
                     logging.info(f"Sent image with title: {title}")
-                    os.remove(image_path)  # Cleanup the image after sending
+                    os.remove(image_path)
 
-                    # Save the sent update
                     sent_updates.add(guid)
-                    save_sent_update(guid)  # Store the GUID or title of the sent update
+                    save_sent_update(guid)
                 else:
                     logging.warning(f"Image download failed for: {title}")
 
@@ -145,7 +149,7 @@ async def fetch_and_send_updates():
             else:
                 logging.info("No new updates found.")
 
-            await asyncio.sleep(600)  # Wait before fetching again
+            await asyncio.sleep(600)
 
         except Exception as e:
             logging.error(f"An error occurred: {e}")
@@ -155,13 +159,17 @@ async def fetch_and_send_updates():
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     logging.info(f"Start command received from {event.chat_id}")
-    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsLatest")]  # Updated button creation
+    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsLatest")]
     await event.respond(
         "Welcome to the Anime News Bot! Updates will be sent to the channel.",
-        buttons=button  # Fixed button handling
+        buttons=button
     )
 
 # Main execution
 if __name__ == '__main__':
     logging.info("Bot is starting...")
-    client.loop.run_until_complete(fetch_and_send_updates())  # Properly run the fetch loop
+
+    # Start the Flask app in a separate thread
+    Thread(target=flask_app.run, kwargs={'host': '0.0.0.0', 'port': 8000}).start()
+
+    client.loop.run_until_complete(fetch_and_send_updates())
