@@ -81,7 +81,6 @@ async def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
-# Function to fetch and send updates
 async def fetch_and_send_updates():
     last_sent_timestamp = load_last_sent_timestamp()
     sent_updates = load_sent_updates()
@@ -95,54 +94,65 @@ async def fetch_and_send_updates():
             latest_entries = []
 
             for entry in feed.entries:
-                logging.debug(f"Feed Entry: {entry}")
+                try:
+                    logging.debug(f"Processing Feed Entry: {entry}")
 
-                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
-                title = entry.title
-                guid = entry.guid if hasattr(entry, 'guid') else title
+                    published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
+                    title = entry.title
+                    guid = entry.guid if hasattr(entry, 'guid') else title
 
-                if guid not in sent_updates:
-                    latest_entries.append(entry)
+                    if guid not in sent_updates:
+                        latest_entries.append(entry)
+                except Exception as entry_error:
+                    logging.error(f"Error processing entry: {entry} - {entry_error}")
+                    continue  # Skip this entry and proceed to the next one
 
             for entry in latest_entries:
-                title = entry.title
-                guid = entry.guid if hasattr(entry, 'guid') else title
-                published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
+                try:
+                    title = entry.title
+                    guid = entry.guid if hasattr(entry, 'guid') else title
+                    published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
-                if published and (last_sent_timestamp is None or published > last_sent_timestamp):
-                    last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
-                    save_last_sent_timestamp(last_sent_timestamp)
+                    if published and (last_sent_timestamp is None or published > last_sent_timestamp):
+                        last_sent_timestamp = max(last_sent_timestamp, published) if last_sent_timestamp else published
+                        save_last_sent_timestamp(last_sent_timestamp)
 
-                youtube_link = entry.link if "youtube.com" in entry.link else None
-                image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
+                    youtube_link = entry.link if "youtube.com" in entry.link else None
+                    image_url = entry.media_thumbnail[0]['url'] if 'media_thumbnail' in entry else entry.enclosure.url if 'enclosure' in entry else None
 
-                if image_url and image_url.endswith("/large.jpg"):
-                    image_url = image_url[:-10]
+                    if image_url and image_url.endswith("/large.jpg"):
+                        image_url = image_url[:-10]
 
-                logging.info(f"Using image URL: {image_url}")
-                image_path = await download_image(image_url, title)
+                    logging.info(f"Using image URL: {image_url}")
+                    image_path = await download_image(image_url, title)
 
-                if image_path:
-                    caption = f"💫 {title}"
-                    reply_markup = []
-                    if youtube_link:
-                        reply_markup.append(Button.url("Watch Trailer", youtube_link))
+                    if image_path:
+                        caption = f"💫 {title}"
+                        reply_markup = []
+                        if youtube_link:
+                            reply_markup.append(Button.url("Watch Trailer", youtube_link))
 
-                    await client.send_file(
-                        CHANNEL_ID,
-                        image_path,
-                        caption=caption,
-                        buttons=reply_markup if reply_markup else None
-                    )
-                    logging.info(f"Sent image with title: {title}")
-                    os.remove(image_path)
+                        try:
+                            await client.send_file(
+                                CHANNEL_ID,
+                                image_path,
+                                caption=caption,
+                                buttons=reply_markup if reply_markup else None
+                            )
+                            logging.info(f"Sent image with title: {title}")
+                        finally:
+                            os.remove(image_path)
 
-                    sent_updates.add(guid)
-                    save_sent_update(guid)
-                else:
-                    logging.warning(f"Image download failed for: {title}")
+                        sent_updates.add(guid)
+                        save_sent_update(guid)
+                    else:
+                        logging.warning(f"Image download failed for: {title}")
 
-                new_updates_count += 1
+                    new_updates_count += 1
+
+                except Exception as update_error:
+                    logging.error(f"Error sending update for entry '{entry.title}': {update_error}")
+                    continue  # Skip this update and proceed to the next one
 
             if new_updates_count > 0:
                 logging.info(f"Sent {new_updates_count} updates.")
@@ -152,7 +162,7 @@ async def fetch_and_send_updates():
             await asyncio.sleep(600)
 
         except Exception as e:
-            logging.error(f"An error occurred: {e}")
+            logging.error(f"An error occurred in the main loop: {e}")
             await asyncio.sleep(60)
 
 # Start command handler
