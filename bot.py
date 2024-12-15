@@ -1,69 +1,55 @@
 import os
 import feedparser
-from flask import Flask
-from threading import Thread
-import aiohttp
 import logging
 import asyncio
-from telethon import TelegramClient, events, Button
-import re
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from dateutil import parser
+import aiohttp
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Directly set your configuration here
+# Bot credentials and configuration
 API_ID = 27332239
 API_HASH = "2fed2c90672125f4c6f42316eed6a837"
 BOT_TOKEN = "7391079505:AAE33ohVv-pPWooCVsOaAoSd81DV9T9mC0Y"
 CHANNEL_ID = '@anime_newslibrary'
 RSS_URL = "https://www.livechart.me/feeds/headlines"
 
-# Path to the file storing the last sent update timestamp
+# Paths for storing state
 LAST_SENT_TIMESTAMP_FILE = "last_sent_timestamp.txt"
 SENT_UPDATES_FILE = "sent_updates.txt"
 
-# Create a new Telethon client with API credentials
-client = TelegramClient("my_bot", API_ID, API_HASH).start(bot_token=BOT_TOKEN)
+# Initialize Pyrogram client
+app = Client("anime_news_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Initialize Flask app
-flask_app = Flask(__name__)
-
-# Define a simple route
-@flask_app.route('/')
-def home():
-    return "Welcome to the Anime News Bot API!"
-
-# Load last sent timestamp from the file
+# Utility functions for file-based state management
 def load_last_sent_timestamp():
     if os.path.exists(LAST_SENT_TIMESTAMP_FILE):
         with open(LAST_SENT_TIMESTAMP_FILE, 'r') as file:
             return parser.parse(file.read().strip())
     return None
 
-# Save the last sent timestamp to the file
 def save_last_sent_timestamp(timestamp):
     with open(LAST_SENT_TIMESTAMP_FILE, 'w') as file:
         file.write(timestamp.isoformat())
 
-# Load sent updates from the file
 def load_sent_updates():
     if os.path.exists(SENT_UPDATES_FILE):
         with open(SENT_UPDATES_FILE, 'r') as file:
             return set(line.strip() for line in file)
     return set()
 
-# Save a new title to the file
 def save_sent_update(title):
     with open(SENT_UPDATES_FILE, 'a') as file:
         file.write(title + '\n')
 
-# Function to sanitize the filename
 def sanitize_filename(title):
     return re.sub(r'[<>:"/\\|?*\x00-\x1F]', '_', title)
 
-# Download image function
 async def download_image(image_url, title):
     sanitized_title = sanitize_filename(title)
     file_path = f"{sanitized_title}.jpg"
@@ -81,6 +67,7 @@ async def download_image(image_url, title):
         logging.error(f"Failed to download image: {e}")
         return None
 
+# Fetch and send updates from RSS feed
 async def fetch_and_send_updates():
     last_sent_timestamp = load_last_sent_timestamp()
     sent_updates = load_sent_updates()
@@ -95,11 +82,9 @@ async def fetch_and_send_updates():
 
             for entry in feed.entries:
                 try:
-                    logging.debug(f"Processing Feed Entry: {entry}")
-
-                    published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
                     title = entry.title
                     guid = entry.guid if hasattr(entry, 'guid') else title
+                    published = parser.parse(entry.pubDate) if hasattr(entry, 'pubDate') else None
 
                     if guid not in sent_updates:
                         latest_entries.append(entry)
@@ -128,16 +113,16 @@ async def fetch_and_send_updates():
 
                     if image_path:
                         caption = f"💫 {title}"
-                        reply_markup = []
+                        buttons = []
                         if youtube_link:
-                            reply_markup.append(Button.url("Watch Trailer", youtube_link))
+                            buttons.append([InlineKeyboardButton("Watch Trailer", url=youtube_link)])
 
                         try:
-                            await client.send_file(
-                                CHANNEL_ID,
-                                image_path,
+                            await app.send_photo(
+                                chat_id=CHANNEL_ID,
+                                photo=image_path,
                                 caption=caption,
-                                buttons=reply_markup if reply_markup else None
+                                reply_markup=InlineKeyboardMarkup(buttons) if buttons else None
                             )
                             logging.info(f"Sent image with title: {title}")
                         finally:
@@ -166,20 +151,23 @@ async def fetch_and_send_updates():
             await asyncio.sleep(60)
 
 # Start command handler
-@client.on(events.NewMessage(pattern='/start'))
-async def start(event):
-    logging.info(f"Start command received from {event.chat_id}")
-    button = [Button.url("Visit Channel", "https://t.me/Anime_NewsLatest")]
-    await event.respond(
+@app.on_message(filters.command("start"))
+async def start_handler(client, message):
+    logging.info(f"Start command received from {message.chat.id}")
+    button = [[InlineKeyboardButton("Visit Channel", url="https://t.me/Anime_NewsLatest")]]
+    await message.reply_text(
         "Welcome to the Anime News Bot! Updates will be sent to the channel.",
-        buttons=button
+        reply_markup=InlineKeyboardMarkup(button)
     )
 
 # Main execution
 if __name__ == '__main__':
     logging.info("Bot is starting...")
 
-    # Start the Flask app in a separate thread
-    Thread(target=flask_app.run, kwargs={'host': '0.0.0.0', 'port': 8000}).start()
-
-    client.loop.run_until_complete(fetch_and_send_updates())
+    # Run the bot and RSS update loop
+    app.start()
+    try:
+        asyncio.run(fetch_and_send_updates())
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("Shutting down bot.")
+        app.stop()
